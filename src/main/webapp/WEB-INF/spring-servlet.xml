@@ -1,0 +1,87 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+       xsi:schemaLocation="
+   http://www.springframework.org/schema/beans
+   http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+   http://www.springframework.org/schema/context
+   http://www.springframework.org/schema/context/spring-context-3.0.xsd
+   http://www.springframework.org/schema/mvc
+   http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd
+   http://www.springframework.org/schema/util
+    http://www.springframework.org/schema/util/spring-util.xsd
+   http://www.springframework.org/schema/data/jpa
+   http://www.springframework.org/schema/data/jpa/spring-jpa.xsd">
+    <context:component-scan base-package="com.controller"/>
+    <jpa:repositories base-package="com.repository"/>
+    <context:component-scan base-package="com.repository"/>
+    <context:component-scan base-package="com.service"/>
+    <mvc:annotation-driven/>
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/WEB-INF/jsp/"/>
+        <property name="suffix" value=".jsp"/>
+    </bean>
+    <util:map id="resthubCoreJpaProperties">
+        <entry key="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
+        <entry key="hibernate.format_sql" value="true"/>
+        <entry key="hibernate.csc.auto" value="update"/>
+        <entry key="hibernate.cache.use_second_level_cache" value="true"/>
+        <entry key="hibernate.cache.provider_class" value="net.sf.ehcache.hibernate.EhCacheRegionFactory"/>
+        <entry key="hibernate.id.new_generator_mappings" value="true"/>
+        <entry key="hibernate.enable_lazy_load_no_trans" value="true"/>
+    </util:map>
+    <bean id="dataSource" class="org.apache.tomcat.jdbc.pool.DataSource" destroy-method="close">
+        <property name="driverClassName" value="org.postgresql.Driver"/>
+        <property name="username" value="postgres"/>
+        <property name="password" value="coviam"/>
+        <property name="jdbcInterceptors"
+                  value="org.apache.tomcat.jdbc.pool.interceptor.ConnectionState;org.apache.tomcat.jdbc.pool.interceptor.StatementFinalizer;
+                  org.apache.tomcat.jdbc.pool.interceptor.SlowQueryReportJmx;org.apache.tomcat.jdbc.pool.interceptor.ResetAbandonedTimer"/>
+        <property name="defaultAutoCommit" value="false"/>
+        <property name="testWhileIdle" value="true"/>
+        <property name="testOnReturn" value="true"/>
+        <property name="testOnBorrow" value="true"/>
+        <!--  <property name="validationQuery" value="1" /> -->
+        <property name="validationQueryTimeout" value="5"/>
+        <property name="removeAbandoned" value="true"/>
+        <property name="logAbandoned" value="true"/>
+        <property name="rollbackOnReturn" value="true"/>
+        <property name="logValidationErrors" value="true"/>
+        <property name="url" value="jdbc:postgresql://localhost:5433/waseem"/>
+        <property name="maxActive" value="100"/>
+        <property name="maxIdle" value="100"/>
+        <property name="maxWait" value="30000"/>
+        <property name="removeAbandonedTimeout" value="60"/>
+    </bean>
+    <bean id="jpaProperties" parent="resthubCoreJpaProperties">
+        <property name="sourceMap">
+            <map merge="true"/>
+        </property>
+    </bean>
+    <bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+        <property name="jpaDialect">
+            <bean class="org.springframework.orm.jpa.vendor.HibernateJpaDialect"/>
+        </property>
+        <property name="jpaVendorAdapter">
+            <bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+                <property name="showSql" value="false"/>
+            </bean>
+        </property>
+        <property name="packagesToScan" value="com.model"/>
+        <property name="jpaProperties" ref="jpaProperties"/>
+        <property name="dataSource" ref="dataSource"/>
+        <property name="persistenceProvider">
+            <bean class="org.hibernate.jpa.HibernatePersistenceProvider"/>
+        </property>
+    </bean>
+    <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+        <property name="entityManagerFactory" ref="entityManagerFactory"/>
+        <property name="defaultTimeout" value="1000"/>
+    </bean>
+    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+        <constructor-arg index="0" ref="dataSource"/>
+    </bean>
+</beans>
